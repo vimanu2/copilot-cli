@@ -137,7 +137,7 @@ For more information about how to use the GitHub Copilot CLI, see [our official 
 
 ### 🔐 Authentication, sessions, and model requests (quick reference)
 
-- **How account connection works:** `/login` uses GitHub's OAuth device flow in your browser, then stores credentials locally for future sessions.
+- **How account connection works:** `/login` uses GitHub's OAuth device flow in your browser, then persists OAuth credentials (access/refresh token pair) locally for future sessions.
 - **PAT alternative:** set `GH_TOKEN` or `GITHUB_TOKEN` with a fine-grained PAT that has **Copilot Requests** permission.
 - **Token refresh/session maintenance:** for OAuth login, the CLI manages token lifecycle automatically. For PAT auth, rotation is your responsibility.
 - **How model communication works:** the CLI sends prompts/tools context to GitHub Copilot APIs, and GitHub routes the request to the selected model provider. Use `/model` to change models and `/usage` to inspect session usage.
@@ -180,7 +180,7 @@ If you want to rotate across multiple GitHub accounts:
 5. Record request count + estimated premium usage from CLI `/usage` output to keep your own per-account ledger.
 
 Notes:
-- There is currently no documented public API that returns a complete **per-model hard limit table** for an account in real time.
+- GitHub does not currently provide a public API endpoint that returns a complete **per-model hard limit table** for an account in real time.
 - For model availability and entitlement, use `/model` in the CLI and handle runtime quota/rate-limit errors with retry + account rotation.
 
 ## 🔧 Configuring LSP Servers
