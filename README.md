@@ -142,7 +142,7 @@ For more information about how to use the GitHub Copilot CLI, see [our official 
 - **Token refresh/session maintenance:** for OAuth login, the CLI manages token lifecycle automatically. For PAT auth, rotation is your responsibility.
 - **How model communication works:** the CLI sends prompts/tools context to GitHub Copilot APIs, and GitHub routes the request to the selected model provider. Use `/model` to change models and `/usage` to inspect session usage.
 
-Example curls (using a token from `GH_TOKEN` or `GITHUB_TOKEN`):
+Example curl commands (using a token from `GH_TOKEN` or `GITHUB_TOKEN`):
 
 ```bash
 TOKEN="${GH_TOKEN:-$GITHUB_TOKEN}"
@@ -170,12 +170,12 @@ curl -sS https://api.github.com/user/copilot/billing \
 
 If you want to rotate across multiple GitHub accounts:
 
-1. Keep one token per account (for example in a secret manager).
+1. Keep one token per account (e.g., in a secret manager).
 2. Before each request, query `GET /user` and `GET /rate_limit` for each account and collect:
    - account login
    - remaining/reset for API rate limit
    - optional Copilot billing endpoint response (if accessible)
-3. Apply a selection policy (for example: pick account with highest normalized remaining budget, or weighted round-robin with cooldown on 429/403).
+3. Apply a selection policy (e.g., pick account with highest normalized remaining budget, or weighted round-robin with cooldown on 429/403).
 4. Route your request using that account's token.
 5. Record request count + estimated premium usage from CLI `/usage` output to keep your own per-account ledger.
 
