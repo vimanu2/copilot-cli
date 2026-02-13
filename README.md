@@ -135,6 +135,54 @@ Each time you submit a prompt to GitHub Copilot CLI, your monthly quota of premi
 
 For more information about how to use the GitHub Copilot CLI, see [our official documentation](https://docs.github.com/copilot/concepts/agents/about-copilot-cli).
 
+### 🔐 Authentication, sessions, and model requests (quick reference)
+
+- **How account connection works:** `/login` uses GitHub's OAuth device flow in your browser, then persists OAuth credentials (access/refresh token pair) locally for future sessions.
+- **PAT alternative:** set `GH_TOKEN` or `GITHUB_TOKEN` with a fine-grained PAT that has **Copilot Requests** permission.
+- **Token refresh/session maintenance:** for OAuth login, the CLI manages token lifecycle automatically. For PAT auth, rotation is your responsibility.
+- **How model communication works:** the CLI sends prompts/tools context to GitHub Copilot APIs, and GitHub routes the request to the selected model provider. Use `/model` to change models and `/usage` to inspect session usage.
+
+Example curl commands (using a token from `GH_TOKEN` or `GITHUB_TOKEN`):
+
+```bash
+TOKEN="${GH_TOKEN:-$GITHUB_TOKEN}"
+
+# 1) Verify which account/token is active
+curl -sS https://api.github.com/user \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Accept: application/vnd.github+json" \
+  -H "X-GitHub-Api-Version: 2022-11-28"
+
+# 2) Check API rate-limit budget for this token/account
+curl -sS https://api.github.com/rate_limit \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Accept: application/vnd.github+json" \
+  -H "X-GitHub-Api-Version: 2022-11-28"
+
+# 3) Check Copilot billing/usage for the authenticated user (if available on your plan)
+curl -sS https://api.github.com/user/copilot/billing \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Accept: application/vnd.github+json" \
+  -H "X-GitHub-Api-Version: 2022-11-28"
+```
+
+### 🔁 Multi-account router strategy (design guidance)
+
+If you want to rotate across multiple GitHub accounts:
+
+1. Keep one token per account (e.g., in a secret manager).
+2. Before each request, query `GET /user` and `GET /rate_limit` for each account and collect:
+   - account login
+   - remaining/reset for API rate limit
+   - optional Copilot billing endpoint response (if accessible)
+3. Apply a selection policy (e.g., pick account with highest normalized remaining budget, or weighted round-robin with cooldown on 429/403).
+4. Route your request using that account's token.
+5. Record request count + estimated premium usage from CLI `/usage` output to keep your own per-account ledger.
+
+Notes:
+- GitHub does not currently provide a public API endpoint that returns a complete **per-model hard limit table** for an account in real time.
+- For model availability and entitlement, use `/model` in the CLI and handle runtime quota/rate-limit errors with retry + account rotation.
+
 ## 🔧 Configuring LSP Servers
 
 GitHub Copilot CLI supports Language Server Protocol (LSP) for enhanced code intelligence. This feature provides intelligent code features like go-to-definition, hover information, and diagnostics.
